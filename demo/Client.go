@@ -2,8 +2,10 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"net"
 	"time"
+	wkNet "wukong/net"
 )
 
 func main() {
@@ -13,24 +15,46 @@ func main() {
 
 	conn, err := net.Dial("tcp", "127.0.0.1:9527")
 	if err != nil {
-		fmt.Println("client start err", err)
+		fmt.Println("client start err exit! ")
 		return
 	}
 
 	for {
-		_, err := conn.Write([]byte("Hello LiuLiGames V0.2 "))
+		dp := wkNet.NewDataPack()
+		binaryMsg, err := dp.Pack(wkNet.NewMessage(0, []byte("LiuLiGamesV0.5 client Test Message ")))
 		if err != nil {
-			fmt.Println("write conn err", err)
-			return
+			fmt.Println("Pack error", err)
 		}
-		buf := make([]byte, 512)
-		cnt, err := conn.Read(buf)
-		if err != nil {
-			fmt.Println("read buf err", err)
+
+		if _, err := conn.Write(binaryMsg); err != nil {
+			fmt.Println("conn Write error", err)
 			return
 		}
 
-		fmt.Printf("server call back: %s ,cnt = %d \n", buf, cnt)
+		binaryHead := make([]byte, dp.GetHeadLen())
+		if _, err := io.ReadFull(conn, binaryHead); err != nil {
+			fmt.Println("read head error", err)
+			return
+		}
+
+		msgHead, err := dp.Unpack(binaryHead)
+		if err != nil {
+			fmt.Println("client unpack msgHead error", err)
+			break
+		}
+
+		if msgHead.GetMsgLen() > 0 {
+			msg := msgHead.(*wkNet.Message)
+			msg.SetData(make([]byte, msg.GetMsgLen()))
+
+			if _, err := io.ReadFull(conn, msg.Data); err != nil {
+				fmt.Println("read msg data error", err)
+				return
+			}
+
+			fmt.Println("-----> Recv Server msgId= ",
+				msg.Id, " len= ", msg.MsgLen, " data = ", string(msg.Data))
+		}
 
 		time.Sleep(1 * time.Second)
 	}

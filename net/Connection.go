@@ -1,7 +1,9 @@
 package net
 
 import (
+	"errors"
 	"fmt"
+	"io"
 	"net"
 	"wukong/iface"
 )
@@ -30,16 +32,41 @@ func (c *Connection) StartReader() {
 	defer c.Stop()
 
 	for {
-		buf := make([]byte, 512)
-		_, err := c.Conn.Read(buf)
-		if err != nil {
-			fmt.Println("recv buf err", err)
-			continue
+		//	buf := make([]byte, utils.GlobalObject.MaxPackageSize)
+		//	_, err := c.Conn.Read(buf)
+		//	if err != nil {
+		//		fmt.Println("recv buf err", err)
+		//		continue
+		//	}
+
+		dp := NewDataPack()
+
+		headData := make([]byte, dp.GetHeadLen())
+		if _, err := io.ReadFull(c.GetTCPConnection(), headData); err != nil {
+			fmt.Println("read msg head error", err)
+			break
 		}
+
+		msg, err := dp.Unpack(headData)
+		if err != nil {
+			fmt.Println("unpack error", err)
+			break
+		}
+
+		var data []byte
+		if msg.GetMsgLen() > 0 {
+			data = make([]byte, msg.GetMsgLen())
+			if _, err := io.ReadFull(c.GetTCPConnection(), data); err != nil {
+				fmt.Println("read msg data error", err)
+				break
+			}
+		}
+
+		msg.SetData(data)
 
 		req := Request{
 			conn: c,
-			data: buf,
+			msg:  msg,
 		}
 
 		go func(request iface.IRequest) {
@@ -84,6 +111,23 @@ func (c *Connection) GetRemoteAddr() net.Addr {
 	return c.Conn.RemoteAddr()
 }
 
-func (c *Connection) Send(data []byte) error {
+func (c *Connection) SendMsg(msgId uint32, data []byte) error {
+	if c.isClosed {
+		return errors.New("Connection Closed when send msg ")
+	}
+
+	dp := NewDataPack()
+
+	binaryMsg, err := dp.Pack(NewMessage(msgId, data))
+	if err != nil {
+		fmt.Println("Pack error msg id = ", msgId)
+		return errors.New("Pack error msg ")
+	}
+
+	if _, err := c.Conn.Write(binaryMsg); err != nil {
+		fmt.Println("Write error msg id = ", msgId, "error :", err)
+		return errors.New("conn Write error ")
+	}
+
 	return nil
 }

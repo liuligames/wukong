@@ -1,0 +1,4 @@
+name: "liuLI V0.4 demoServerApp"
+Host: "127.0.0.1"
+TcpPort: 9527
+MaxConn: 3

@@ -13,7 +13,7 @@ type IConnection interface {
 
 	GetRemoteAddr() net.Addr
 
-	Send(data []byte) error
+	SendMsg(msgId uint32, data []byte) error
 }
 
 type HandleFunc func(*net.TCPConn, []byte, int) error

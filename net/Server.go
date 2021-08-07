@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net"
 	"wukong/iface"
+	"wukong/utils"
 )
 
 type Server struct {
@@ -15,6 +16,10 @@ type Server struct {
 }
 
 func (s *Server) Start() {
+	fmt.Printf("[liuli] Server Name : %s listenner at IP : %s ,Port : %d is starting \n",
+		utils.GlobalObject.Name, utils.GlobalObject.Host, utils.GlobalObject.TcpPort)
+	fmt.Printf("[liuli] Version : %s MaxConn : %d ,MaxPackageSize : %d \n",
+		utils.GlobalObject.Version, utils.GlobalObject.MaxConn, utils.GlobalObject.MaxPackageSize)
 	fmt.Printf("[Start] Server Listenner at IP :%s , Port %d \n", s.IP, s.Port)
 
 	go func() {
@@ -66,12 +71,12 @@ func (s *Server) AddRouter(router iface.IRouter) {
 	fmt.Println("Add Router !!!!")
 }
 
-func NewServer(name string) iface.IServer {
+func NewServer() iface.IServer {
 	return &Server{
-		Name:      name,
+		Name:      utils.GlobalObject.Name,
 		IPVersion: "tcp4",
-		IP:        "0.0.0.0",
-		Port:      9527,
+		IP:        utils.GlobalObject.Host,
+		Port:      utils.GlobalObject.TcpPort,
 		Router:    nil,
 	}
 }
