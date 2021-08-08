@@ -10,15 +10,6 @@ type PingRouter struct {
 	net.BaseRouter
 }
 
-//func (pr *PingRouter) PreHandle(request iface.IRequest) {
-//	fmt.Println("Call Router PreHandle ....")
-//
-//	_, err := request.GetConnection().GetTCPConnection().Write([]byte("before ping.... \n"))
-//	if err != nil {
-//		fmt.Println("call back before ping error ")
-//	}
-//}
-
 func (pr *PingRouter) Handle(request iface.IRequest) {
 	fmt.Println("Call Router Handle ....")
 
@@ -30,17 +21,6 @@ func (pr *PingRouter) Handle(request iface.IRequest) {
 		fmt.Println(err)
 	}
 }
-
-//func (pr *PingRouter) PostHandle(request iface.IRequest) {
-//	fmt.Println("Call Router PostHandle ....")
-//
-//	_, err := request.GetConnection().GetTCPConnection().Write([]byte("after ping.... \n"))
-//	if err != nil {
-//		fmt.Println("call back after ping error ")
-//	}
-//}
-
-
 
 type HelloRouter struct {
 	net.BaseRouter

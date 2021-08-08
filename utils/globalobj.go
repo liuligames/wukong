@@ -8,13 +8,15 @@ import (
 
 type GlobalObj struct {
 	TcpServer iface.IServer `yaml:"TcpServer"`
-	Host      string `yaml:"Host"`
-	TcpPort   int `yaml:"TcpPort"`
-	Name      string `yaml:"Name"`
+	Host      string        `yaml:"Host"`
+	TcpPort   int           `yaml:"TcpPort"`
+	Name      string        `yaml:"Name"`
 
-	Version        string `yaml:"Version"`
-	MaxConn        int `yaml:"MaxConn"`
-	MaxPackageSize uint32 `yaml:"MaxPackageSize"`
+	Version          string `yaml:"Version"`
+	MaxConn          int    `yaml:"MaxConn"`
+	MaxPackageSize   uint32 `yaml:"MaxPackageSize"`
+	WorkerPoolSize   uint32 `yaml:"WorkerPoolSize"`
+	MaxWorkerTaskLen uint32 `yaml:"MaxWorkerTaskLen"`
 }
 
 var GlobalObject *GlobalObj
@@ -32,12 +34,14 @@ func (g *GlobalObj) Reload() {
 
 func init() {
 	GlobalObject = &GlobalObj{
-		Name:           "LiuLIServerApp",
-		Version:        "V0.7",
-		TcpPort:        9527,
-		Host:           "0.0.0.0",
-		MaxConn:        1000,
-		MaxPackageSize: 4096,
+		Name:             "LiuLIServerApp",
+		Version:          "V0.8",
+		TcpPort:          9527,
+		Host:             "0.0.0.0",
+		MaxConn:          1000,
+		MaxPackageSize:   4096,
+		WorkerPoolSize:   10,
+		MaxWorkerTaskLen: 1024,
 	}
 
 	GlobalObject.Reload()
