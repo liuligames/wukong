@@ -9,26 +9,28 @@ import (
 )
 
 type Connection struct {
-	Conn     *net.TCPConn
-	ConnID   uint32
-	isClosed bool
-	ExitChan chan bool
-	Router   iface.IRouter
+	Conn       *net.TCPConn
+	ConnID     uint32
+	isClosed   bool
+	ExitChan   chan bool
+	msgChan    chan []byte
+	MsgHandler iface.IMsgHandler
 }
 
-func NewConnection(conn *net.TCPConn, connID uint32, router iface.IRouter) *Connection {
+func NewConnection(conn *net.TCPConn, connID uint32, msgHandler iface.IMsgHandler) *Connection {
 	return &Connection{
-		Conn:     conn,
-		ConnID:   connID,
-		Router:   router,
-		isClosed: false,
-		ExitChan: make(chan bool, 1),
+		Conn:       conn,
+		ConnID:     connID,
+		MsgHandler: msgHandler,
+		isClosed:   false,
+		msgChan:    make(chan []byte),
+		ExitChan:   make(chan bool, 1),
 	}
 }
 
 func (c *Connection) StartReader() {
 	fmt.Println("reader goroutine is running.....")
-	defer fmt.Println("connId = ", c.ConnID, "reader is exit remote addr is ", c.GetRemoteAddr().String())
+	defer fmt.Println("connId = ", c.ConnID, "[reader is exit] remote addr is ", c.GetRemoteAddr().String())
 	defer c.Stop()
 
 	for {
@@ -69,11 +71,24 @@ func (c *Connection) StartReader() {
 			msg:  msg,
 		}
 
-		go func(request iface.IRequest) {
-			c.Router.PreHandle(request)
-			c.Router.Handle(request)
-			c.Router.PostHandle(request)
-		}(&req)
+		go c.MsgHandler.DoMsgHandler(&req)
+	}
+}
+
+func (c *Connection) StartWriter() {
+	fmt.Println("[Writer Goroutine is running]")
+	defer fmt.Println(c.GetRemoteAddr().String(), " [conn Writer exit]")
+
+	for {
+		select {
+		case data := <-c.msgChan:
+			if _, err := c.Conn.Write(data); err != nil {
+				fmt.Println("Send data error ", err)
+				return
+			}
+		case <-c.ExitChan:
+			return
+		}
 	}
 }
 
@@ -81,7 +96,8 @@ func (c *Connection) Start() {
 	fmt.Println("conn start ... connId  = ", c.ConnID)
 
 	go c.StartReader()
-	//todo 启动从当前连接写数据的业务
+
+	go c.StartWriter()
 
 }
 
@@ -95,7 +111,10 @@ func (c *Connection) Stop() {
 
 	_ = c.Conn.Close()
 
+	c.ExitChan <- true
+
 	close(c.ExitChan)
+	close(c.msgChan)
 }
 
 func (c *Connection) GetTCPConnection() *net.TCPConn {
@@ -124,10 +143,7 @@ func (c *Connection) SendMsg(msgId uint32, data []byte) error {
 		return errors.New("Pack error msg ")
 	}
 
-	if _, err := c.Conn.Write(binaryMsg); err != nil {
-		fmt.Println("Write error msg id = ", msgId, "error :", err)
-		return errors.New("conn Write error ")
-	}
+	c.msgChan <- binaryMsg
 
 	return nil
 }

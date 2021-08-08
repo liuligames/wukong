@@ -29,7 +29,6 @@ func (m *Message) SetMsgId(id uint32) {
 }
 func (m *Message) SetMsgLen(msgLen uint32) {
 	m.MsgLen = msgLen
-
 }
 func (m *Message) SetData(data []byte) {
 	m.Data = data
