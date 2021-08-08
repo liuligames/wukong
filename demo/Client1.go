@@ -10,7 +10,7 @@ import (
 
 func main() {
 
-	fmt.Println("client0 start...")
+	fmt.Println("client1 start...")
 	time.Sleep(1 + time.Second)
 
 	conn, err := net.Dial("tcp", "127.0.0.1:9527")
@@ -21,7 +21,7 @@ func main() {
 
 	for {
 		dp := wkNet.NewDataPack()
-		binaryMsg, err := dp.Pack(wkNet.NewMessage(0, []byte("LiuLiGamesV0.7 client0 Test Message ")))
+		binaryMsg, err := dp.Pack(wkNet.NewMessage(1, []byte("LiuLiGamesV0.7 client1 Test Message ")))
 		if err != nil {
 			fmt.Println("Pack error", err)
 		}
