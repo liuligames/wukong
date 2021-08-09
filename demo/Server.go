@@ -43,11 +43,27 @@ func DoConnectionBegin(conn iface.IConnection) {
 	if err := conn.SendMsg(202, []byte("DoConnection Begin")); err != nil {
 		fmt.Println(err)
 	}
+
+	fmt.Println("set conn name")
+
+	conn.SetProperty("Name", "LiuLiGames")
+	conn.SetProperty("GitHub", "https://github.com/liuligames")
+	conn.SetProperty("Blob", "https://liuligames.com")
 }
 
 func DoConnectionLost(conn iface.IConnection) {
 	fmt.Println("DoConnectionLast is Called ...")
 	fmt.Println("conn id = ", conn.GetConnID(), "is lost")
+
+	if name, err := conn.GetProperty("Name"); err == nil {
+		fmt.Println("Name = ", name)
+	}
+	if github, err := conn.GetProperty("GitHub"); err == nil {
+		fmt.Println("GitHub = ", github)
+	}
+	if blob, err := conn.GetProperty("Blob"); err == nil {
+		fmt.Println("Blob = ", blob)
+	}
 }
 
 func main() {

@@ -5,18 +5,21 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"sync"
 	"wukong/iface"
 	"wukong/utils"
 )
 
 type Connection struct {
-	TcpServer  iface.IServer
-	Conn       *net.TCPConn
-	ConnID     uint32
-	isClosed   bool
-	ExitChan   chan bool
-	msgChan    chan []byte
-	MsgHandler iface.IMsgHandler
+	TcpServer    iface.IServer
+	Conn         *net.TCPConn
+	ConnID       uint32
+	isClosed     bool
+	ExitChan     chan bool
+	msgChan      chan []byte
+	MsgHandler   iface.IMsgHandler
+	property     map[string]interface{}
+	propertyLock sync.RWMutex
 }
 
 func NewConnection(tcpServer iface.IServer, conn *net.TCPConn, connID uint32, msgHandler iface.IMsgHandler) *Connection {
@@ -28,6 +31,7 @@ func NewConnection(tcpServer iface.IServer, conn *net.TCPConn, connID uint32, ms
 		isClosed:   false,
 		msgChan:    make(chan []byte),
 		ExitChan:   make(chan bool, 1),
+		property:   make(map[string]interface{}),
 	}
 	c.TcpServer.GetConnManager().Add(c)
 	return c
@@ -160,4 +164,28 @@ func (c *Connection) SendMsg(msgId uint32, data []byte) error {
 	c.msgChan <- binaryMsg
 
 	return nil
+}
+
+func (c *Connection) SetProperty(key string, value interface{}) {
+	c.propertyLock.Lock()
+	defer c.propertyLock.Unlock()
+
+	c.property[key] = value
+}
+
+func (c *Connection) GetProperty(key string) (interface{}, error) {
+	c.propertyLock.RLock()
+	defer c.propertyLock.RUnlock()
+	if value, ok := c.property[key]; ok {
+		return value, nil
+	} else {
+		return nil, errors.New("no property found")
+	}
+}
+
+func (c *Connection) RemoveProperty(key string) {
+	c.propertyLock.Lock()
+	defer c.propertyLock.Unlock()
+
+	delete(c.property, key)
 }
