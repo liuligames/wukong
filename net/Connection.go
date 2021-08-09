@@ -108,6 +108,7 @@ func (c *Connection) Start() {
 
 	go c.StartWriter()
 
+	c.TcpServer.CallOnConnStart(c)
 }
 
 func (c *Connection) Stop() {
@@ -117,6 +118,8 @@ func (c *Connection) Stop() {
 		return
 	}
 	c.isClosed = true
+
+	c.TcpServer.CallOnConnStop(c)
 
 	_ = c.Conn.Close()
 
