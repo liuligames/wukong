@@ -8,11 +8,12 @@ import (
 )
 
 type Server struct {
-	Name       string
-	IPVersion  string
-	IP         string
-	Port       int
-	MsgHandler iface.IMsgHandler
+	Name        string
+	IPVersion   string
+	IP          string
+	Port        int
+	MsgHandler  iface.IMsgHandler
+	ConnManager iface.IConnManager
 }
 
 func (s *Server) Start() {
@@ -25,7 +26,6 @@ func (s *Server) Start() {
 	go func() {
 
 		s.MsgHandler.StartWorkerPool()
-
 
 		addr, err := net.ResolveTCPAddr(s.IPVersion, fmt.Sprintf("%s:%d", s.IP, s.Port))
 		if err != nil {
@@ -50,7 +50,15 @@ func (s *Server) Start() {
 				continue
 			}
 
-			dealConn := NewConnection(conn, connId, s.MsgHandler)
+			if s.ConnManager.Len() >= utils.GlobalObject.MaxConn {
+				fmt.Println("too many connections maxConn = ", utils.GlobalObject.MaxConn)
+				if err := conn.Close(); err != nil {
+					fmt.Println("MaxConn Close error :", err)
+				}
+				continue
+			}
+
+			dealConn := NewConnection(s, conn, connId, s.MsgHandler)
 			connId++
 
 			go dealConn.Start()
@@ -59,7 +67,8 @@ func (s *Server) Start() {
 }
 
 func (s *Server) Stop() {
-
+	fmt.Println("stop server name", s.Name)
+	s.ConnManager.ClearConn()
 }
 
 func (s *Server) Serve() {
@@ -75,12 +84,17 @@ func (s *Server) AddRouter(msgId uint32, router iface.IRouter) {
 	fmt.Println("Add Router !!!!")
 }
 
+func (s *Server) GetConnManager() iface.IConnManager {
+	return s.ConnManager
+}
+
 func NewServer() iface.IServer {
 	return &Server{
-		Name:       utils.GlobalObject.Name,
-		IPVersion:  "tcp4",
-		IP:         utils.GlobalObject.Host,
-		Port:       utils.GlobalObject.TcpPort,
-		MsgHandler: NewMsgHandler(),
+		Name:        utils.GlobalObject.Name,
+		IPVersion:   "tcp4",
+		IP:          utils.GlobalObject.Host,
+		Port:        utils.GlobalObject.TcpPort,
+		MsgHandler:  NewMsgHandler(),
+		ConnManager: NewConnManager(),
 	}
 }

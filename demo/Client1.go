@@ -21,7 +21,7 @@ func main() {
 
 	for {
 		dp := wkNet.NewDataPack()
-		binaryMsg, err := dp.Pack(wkNet.NewMessage(1, []byte("LiuLiGamesV0.8 client1 Test Message ")))
+		binaryMsg, err := dp.Pack(wkNet.NewMessage(1, []byte("LiuLiGamesV0.9 client1 Test Message ")))
 		if err != nil {
 			fmt.Println("Pack error", err)
 		}

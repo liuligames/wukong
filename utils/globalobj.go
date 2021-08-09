@@ -35,7 +35,7 @@ func (g *GlobalObj) Reload() {
 func init() {
 	GlobalObject = &GlobalObj{
 		Name:             "LiuLIServerApp",
-		Version:          "V0.8",
+		Version:          "V0.9",
 		TcpPort:          9527,
 		Host:             "0.0.0.0",
 		MaxConn:          1000,
