@@ -1,0 +1,36 @@
+syntax = "proto3";
+package pb;
+option csharp_namespace = "Pb";
+option go_package = "./msg";
+
+//同步玩家id
+message SyncPid{
+  int32 PId = 1;
+}
+
+//位置信息
+message Position{
+  float x = 1;
+  float y = 2;
+  float z = 3;
+  float v = 4;
+}
+
+//广播消息
+message BroadCast{
+  int32 PId = 1;
+  int32 Tp = 2; //1-世界聊天、2-玩家位置、3-动作、4-移动后坐标信息更新
+  oneof Data{
+    string content = 3;  //聊天信息
+    Position P = 4;      //广播位置
+    int32 ActionData = 5;//玩家动作
+  }
+}
+
+//世界聊天
+message Talk{
+  string content = 1;
+  string name = 2;
+}
+
+

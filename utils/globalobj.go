@@ -3,6 +3,9 @@ package utils
 import (
 	"gopkg.in/yaml.v3"
 	"io/ioutil"
+	"net"
+	"net/http"
+	"time"
 	"wukong/iface"
 )
 
@@ -45,4 +48,15 @@ func init() {
 	}
 
 	GlobalObject.Reload()
+}
+
+var HTTPTransport = &http.Transport{
+	DialContext: (&net.Dialer{
+		Timeout:   30 * time.Second, // 连接超时时间
+		KeepAlive: 60 * time.Second, // 保持长连接的时间
+	}).DialContext, // 设置连接的参数
+	MaxIdleConns:          500, // 最大空闲连接
+	IdleConnTimeout:       60 * time.Second, // 空闲连接的超时时间
+	ExpectContinueTimeout: 30 * time.Second, // 等待服务第一个响应的超时时间
+	MaxIdleConnsPerHost:   100, // 每个host保持的空闲连接数
 }

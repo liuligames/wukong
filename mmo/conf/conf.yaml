@@ -1,0 +1,5 @@
+name: "MMO Games"
+Host: "0.0.0.0"
+TcpPort: 9527
+MaxConn: 3000
+WorkerPoolSize: 10

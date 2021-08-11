@@ -25,6 +25,7 @@ func (mh *MsgHandler) DoMsgHandler(request iface.IRequest) {
 	handler, ok := mh.Apis[request.GetMsgId()]
 	if !ok {
 		fmt.Println(" api msgId = ", request.GetMsgId(), "is not found Need Register")
+		return
 	}
 
 	handler.PreHandle(request)
