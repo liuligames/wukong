@@ -97,3 +97,86 @@ func (p *Player) Talk(content string) {
 	}
 
 }
+
+func (p *Player) SyncSurrounding() {
+	pIds := WorldManagerObj.AoiManager.GetPIdsByPos(p.X, p.Z)
+	players := make([]*Player, 0, len(pIds))
+	for _, pId := range pIds {
+		players = append(players, WorldManagerObj.GetPlayerByPId(int32(pId)))
+	}
+
+	protoMsg := &msg.BroadCast{
+		PId: p.PId,
+		Tp:  2,
+		Data: &msg.BroadCast_P{
+			P: &msg.Position{
+				X: p.X,
+				Y: p.Y,
+				Z: p.Z,
+				V: p.V,
+			},
+		},
+	}
+	for _, player := range players {
+		player.SendMsg(200, protoMsg)
+	}
+
+	playersProtoMsg := make([]*msg.Player, 0, len(players))
+	for _, player := range players {
+		p := &msg.Player{
+			PId: player.PId,
+			P: &msg.Position{
+				X: player.X,
+				Y: player.Y,
+				Z: player.Z,
+				V: player.V,
+			},
+		}
+
+		playersProtoMsg = append(playersProtoMsg, p)
+	}
+
+	syncPlayersProtoMsg := &msg.SyncPlayers{
+		Ps: playersProtoMsg,
+	}
+
+	p.SendMsg(202, syncPlayersProtoMsg)
+
+}
+
+func (p *Player) UpdatePos(x float32, y float32, z float32, v float32) {
+	p.X = x
+	p.Y = y
+	p.Z = z
+	p.V = v
+
+	protoMsg := &msg.BroadCast{
+		PId: p.PId,
+		Tp:  4,
+		Data: &msg.BroadCast_P{
+			P: &msg.Position{
+				X: x,
+				Y: y,
+				Z: z,
+				V: v,
+			},
+		},
+	}
+
+	players := p.GetSurroundingPlayers()
+
+	for _, Player := range players {
+		Player.SendMsg(200, protoMsg)
+	}
+}
+
+func (p Player) GetSurroundingPlayers() []*Player {
+	pIds := WorldManagerObj.AoiManager.GetPIdsByPos(p.X, p.Z)
+
+	players := make([]*Player, 0, len(pIds))
+	for _, pid := range pIds {
+		players = append(players, WorldManagerObj.GetPlayerByPId(int32(pid)))
+	}
+
+	return players
+}

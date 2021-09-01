@@ -19,6 +19,8 @@ func OnConnectionAdd(conn iface.IConnection) {
 
 	conn.SetProperty("PId", player.PId)
 
+	player.SyncSurrounding()
+
 	fmt.Println("===========》 Player id = ", player.PId, "is arrived ========")
 }
 
@@ -28,6 +30,7 @@ func main() {
 	s.SetOnConnStart(OnConnectionAdd)
 
 	s.AddRouter(2, &api.WorldChatApi{})
+	s.AddRouter(3, &api.MoveApi{})
 
 	s.Serve()
 }

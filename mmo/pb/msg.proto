@@ -33,4 +33,15 @@ message Talk{
   string name = 2;
 }
 
+//同步玩家显示数据
+message SyncPlayers{
+  repeated Player ps = 1;
+}
+
+//玩家信息
+message Player{
+  int32 PId = 1;
+  Position P = 2;
+}
+
 
